@@ -160,8 +160,12 @@ vim.opt.scrolloff = 999
 -- Primeagen settings
 vim.opt.guicursor = ''
 
-vim.opt.softtabstop = 4
+vim.opt.tabstop = 2
+vim.opt.softtabstop = 2
+vim.opt.shiftwidth = 2
 vim.opt.expandtab = true
+
+vim.opt.autoindent = true
 
 vim.opt.smartindent = true
 
@@ -181,7 +185,7 @@ vim.opt.isfname:append '@-@'
 
 vim.opt.updatetime = 50
 
--- vim.opt.colorcolumn = '80'
+vim.opt.colorcolumn = '80'
 
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
@@ -827,7 +831,8 @@ require('lazy').setup({
         --
         -- You can use a sub-list to tell conform to run *until* a formatter
         -- is found.
-        -- javascript = { { "prettierd", "prettier" } },
+        javascript = { { 'prettierd', 'prettier' } },
+        svelte = { { 'prettier' } },
       },
     },
   },
@@ -951,18 +956,6 @@ require('lazy').setup({
       vim.cmd.hi 'Comment gui=none'
     end,
   },
-
-  {
-    'sonph/onehalf',
-    priority = 1000, -- Make sure to load this before all the other start plugins.
-    lazy = false,
-    config = function(plugin)
-      vim.opt.rtp:append(plugin.dir .. '/vim')
-      vim.cmd [[ colorscheme onehalfdark ]]
-      -- or vim.cmd [[ colorscheme onehalflight ]] if you prefer light theme
-    end,
-  },
-
   { -- You can easily change to a different colorscheme.
     -- Change the name of the colorscheme plugin below, and then
     -- change the command in the config to whatever the name of that colorscheme is.
@@ -980,7 +973,35 @@ require('lazy').setup({
     end,
   },
 
+  {
+    'shaunsingh/nord.nvim',
+    init = function()
+      vim.cmd.colorscheme 'nord'
+
+      vim.cmd.hi 'Comment gui=none'
+    end,
+  },
+  {
+    'AlexvZyl/nordic.nvim',
+    init = function()
+      vim.cmd.colorscheme 'nordic'
+
+      vim.cmd.hi 'Comment gui=none'
+    end,
+  },
+
+  {
+    'rebelot/kanagawa.nvim',
+    priority = 1000,
+    init = function()
+      vim.cmd.colorscheme 'kanagawa'
+
+      vim.cmd.hi 'Comment gui=none'
+    end,
+  },
+
   -- Highlight todo, notes, etc in comments
+
   { 'folke/todo-comments.nvim', event = 'VimEnter', dependencies = { 'nvim-lua/plenary.nvim' }, opts = { signs = false } },
 
   { -- Collection of various small independent plugins/modules
