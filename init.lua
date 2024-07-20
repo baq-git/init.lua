@@ -145,8 +145,8 @@ vim.opt.splitbelow = true
 -- Sets how neovim will display certain whitespace characters in the editor.
 --  See `:help 'list'`
 --  and `:help 'listchars'`
-vim.opt.list = true
-vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
+-- vim.opt.list = true
+-- vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
 
 -- Preview substitutions live, as you type!
 vim.opt.inccommand = 'split'
@@ -185,7 +185,7 @@ vim.opt.isfname:append '@-@'
 
 vim.opt.updatetime = 50
 
-vim.opt.colorcolumn = '80'
+-- vim.opt.colorcolumn = '80'
 
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
@@ -290,13 +290,13 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   end,
 })
 
--- vim.api.nvim_create_autocmd('VimEnter', {
---   desc = 'Auto explore files in when run nvim cmd',
---   callback = function()
---     vim.cmd ':Explore'
---   end,
--- })
-
+vim.api.nvim_create_autocmd('VimEnter', {
+  desc = 'Auto explore files in when run nvim cmd',
+  callback = function()
+    vim.cmd ':NvimTreeToggle'
+  end,
+})
+--
 -- [[ Install `lazy.nvim` plugin manager ]]
 --    See `:help lazy.nvim.txt` or https://github.com/folke/lazy.nvim for more info
 local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'
@@ -392,6 +392,9 @@ require('lazy').setup({
   -- Then, because we use the `config` key, the configuration only runs
   -- after the plugin has been loaded:
   --  config = function() ... end
+
+  -- Indent guides
+  { 'lukas-reineke/indent-blankline.nvim', main = 'ibl', opts = {} },
 
   { -- Useful plugin to show you pending keybinds.
     'folke/which-key.nvim',
@@ -832,7 +835,6 @@ require('lazy').setup({
         -- You can use a sub-list to tell conform to run *until* a formatter
         -- is found.
         javascript = { { 'prettierd', 'prettier' } },
-        svelte = { { 'prettier' } },
       },
     },
   },
@@ -948,47 +950,48 @@ require('lazy').setup({
     end,
   },
 
-  {
-    'jaredgorski/spacecamp',
-    init = function()
-      vim.cmd.colorscheme 'spacecamp_lite'
-
-      vim.cmd.hi 'Comment gui=none'
-    end,
-  },
-  { -- You can easily change to a different colorscheme.
-    -- Change the name of the colorscheme plugin below, and then
-    -- change the command in the config to whatever the name of that colorscheme is.
-    --
-    -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
-    'folke/tokyonight.nvim',
-    init = function()
-      -- Load the colorscheme here.
-      -- Like many other themes, this one has different styles, and you could load
-      -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-      vim.cmd.colorscheme 'tokyonight-night'
-
-      -- You can configure highlights by doing something like:
-      vim.cmd.hi 'Comment gui=none'
-    end,
-  },
-
-  {
-    'shaunsingh/nord.nvim',
-    init = function()
-      vim.cmd.colorscheme 'nord'
-
-      vim.cmd.hi 'Comment gui=none'
-    end,
-  },
-  {
-    'AlexvZyl/nordic.nvim',
-    init = function()
-      vim.cmd.colorscheme 'nordic'
-
-      vim.cmd.hi 'Comment gui=none'
-    end,
-  },
+  -- [[THEME]]
+  -- {
+  --   'jaredgorski/spacecamp',
+  --   init = function()
+  --     vim.cmd.colorscheme 'spacecamp_lite'
+  --
+  --     vim.cmd.hi 'Comment gui=none'
+  --   end,
+  -- },
+  -- { -- You can easily change to a different colorscheme.
+  --   -- Change the name of the colorscheme plugin below, and then
+  --   -- change the command in the config to whatever the name of that colorscheme is.
+  --   --
+  --   -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
+  --   'folke/tokyonight.nvim',
+  --   init = function()
+  --     -- Load the colorscheme here.
+  --     -- Like many other themes, this one has different styles, and you could load
+  --     -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
+  --     vim.cmd.colorscheme 'tokyonight-night'
+  --
+  --     -- You can configure highlights by doing something like:
+  --     vim.cmd.hi 'Comment gui=none'
+  --   end,
+  -- },
+  --
+  -- {
+  --   'shaunsingh/nord.nvim',
+  --   init = function()
+  --     vim.cmd.colorscheme 'nord'
+  --
+  --     vim.cmd.hi 'Comment gui=none'
+  --   end,
+  -- },
+  -- {
+  --   'AlexvZyl/nordic.nvim',
+  --   init = function()
+  --     vim.cmd.colorscheme 'nordic'
+  --
+  --     vim.cmd.hi 'Comment gui=none'
+  --   end,
+  -- },
 
   {
     'rebelot/kanagawa.nvim',
@@ -1045,7 +1048,23 @@ require('lazy').setup({
     'nvim-treesitter/nvim-treesitter',
     build = ':TSUpdate',
     opts = {
-      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' },
+      ensure_installed = {
+        'bash',
+        'typescript',
+        'javascript',
+        'css',
+        'svelte',
+        'diff',
+        'html',
+        'lua',
+        'luadoc',
+        'markdown',
+        'markdown_inline',
+        'query',
+        'ruby',
+        'vim',
+        'vimdoc',
+      },
       -- Autoinstall languages that are not installed
       auto_install = true,
       highlight = {
