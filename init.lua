@@ -155,7 +155,7 @@ vim.opt.inccommand = 'split'
 vim.opt.cursorline = true
 
 -- Minimal number of screen lines to keep above and below the cursor.
-vim.opt.scrolloff = 10
+vim.opt.scrolloff = 999
 
 -- Primeagen settings
 vim.opt.guicursor = ''
@@ -176,7 +176,6 @@ vim.opt.incsearch = true
 
 vim.opt.termguicolors = true
 
-vim.opt.scrolloff = 8
 vim.opt.signcolumn = 'yes'
 vim.opt.isfname:append '@-@'
 
@@ -221,8 +220,6 @@ vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower win
 vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
 
 -- Primeagen Keymaps
--- vim.keymap.set('n', '<leader>pv', vim.cmd.Ex)
-
 -- Line Keymaps
 vim.keymap.set('v', 'J', ":m '>+1<CR>gv=gv")
 vim.keymap.set('v', 'K', ":m '<-2<CR>gv=gv")
@@ -946,13 +943,32 @@ require('lazy').setup({
     end,
   },
 
+  {
+    'jaredgorski/spacecamp',
+    init = function()
+      vim.cmd.colorscheme 'spacecamp_lite'
+
+      vim.cmd.hi 'Comment gui=none'
+    end,
+  },
+
+  {
+    'sonph/onehalf',
+    priority = 1000, -- Make sure to load this before all the other start plugins.
+    lazy = false,
+    config = function(plugin)
+      vim.opt.rtp:append(plugin.dir .. '/vim')
+      vim.cmd [[ colorscheme onehalfdark ]]
+      -- or vim.cmd [[ colorscheme onehalflight ]] if you prefer light theme
+    end,
+  },
+
   { -- You can easily change to a different colorscheme.
     -- Change the name of the colorscheme plugin below, and then
     -- change the command in the config to whatever the name of that colorscheme is.
     --
     -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
     'folke/tokyonight.nvim',
-    priority = 1000, -- Make sure to load this before all the other start plugins.
     init = function()
       -- Load the colorscheme here.
       -- Like many other themes, this one has different styles, and you could load
