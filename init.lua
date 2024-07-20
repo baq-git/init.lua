@@ -394,7 +394,16 @@ require('lazy').setup({
   --  config = function() ... end
 
   -- Indent guides
-  { 'lukas-reineke/indent-blankline.nvim', main = 'ibl', opts = {} },
+  {
+    'lukas-reineke/indent-blankline.nvim',
+    main = 'ibl',
+    opts = {
+      indent = { char = '' },
+      whitespace = {
+        highlight = { 'Whitespace' },
+      },
+    },
+  },
 
   { -- Useful plugin to show you pending keybinds.
     'folke/which-key.nvim',
