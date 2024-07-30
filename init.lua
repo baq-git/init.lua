@@ -336,6 +336,10 @@ require('lazy').setup({
   -- "gc" to comment visual regions/lines
   { 'numToStr/Comment.nvim', opts = {} },
 
+  { 'windwp/nvim-ts-autotag', opts = {} },
+
+  { 'jiangmiao/auto-pairs' },
+
   {
     'theprimeagen/harpoon',
 
@@ -762,7 +766,6 @@ require('lazy').setup({
         --
         -- But for many setups, the LSP (`tsserver`) will work just fine
         -- tsserver = {},
-        --
 
         lua_ls = {
           -- cmd = {...},
