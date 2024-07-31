@@ -347,21 +347,21 @@ require('lazy').setup({
       local mark = require 'harpoon.mark'
       local ui = require 'harpoon.ui'
 
-      vim.keymap.set('n', '<leader>a', mark.add_file)
+      vim.keymap.set('n', '<leader>a', mark.add_file, { desc = 'Add file to Harpoon' })
       vim.keymap.set('n', '<C-e>', ui.toggle_quick_menu)
 
-      vim.keymap.set('n', '<C-h>', function()
-        ui.nav_file(0)
-      end)
-      vim.keymap.set('n', '<C-j>', function()
+      vim.keymap.set('n', '<leader>1', function()
         ui.nav_file(1)
-      end)
-      vim.keymap.set('n', '<C-k>', function()
+      end, { desc = 'Go to Harpoon 1' })
+      vim.keymap.set('n', '<leader>2', function()
         ui.nav_file(2)
-      end)
-      vim.keymap.set('n', '<C-l>', function()
+      end, { desc = 'Go to Harpoon 2' })
+      vim.keymap.set('n', '<leader>3', function()
         ui.nav_file(3)
-      end)
+      end, { desc = 'Go to Harpoon 3' })
+      vim.keymap.set('n', '<leader>4', function()
+        ui.nav_file(4)
+      end, { desc = 'Go to Harpoon 4' })
     end,
   },
   -- Here is a more advanced example where we pass configuration
@@ -440,7 +440,7 @@ require('lazy').setup({
   {
     'mbbill/undotree',
     config = function()
-      vim.keymap.set('n', '<leader>u', vim.cmd.UndotreeToggle)
+      vim.keymap.set('n', '<leader>u', vim.cmd.UndotreeToggle, { desc = 'Open undotree' })
     end,
   },
   {
