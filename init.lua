@@ -437,12 +437,14 @@ require('lazy').setup({
       },
     },
   },
+
   {
     'mbbill/undotree',
     config = function()
       vim.keymap.set('n', '<leader>u', vim.cmd.UndotreeToggle, { desc = 'Open undotree' })
     end,
   },
+
   {
     'nvim-tree/nvim-tree.lua',
     config = function()
@@ -766,7 +768,13 @@ require('lazy').setup({
         --
         -- But for many setups, the LSP (`tsserver`) will work just fine
         -- tsserver = {},
-
+        -- rubocop = {
+        --   enabled = true,
+        --   name = 'rubocop',
+        --   cmd = { 'bundle', 'exec', 'rubocop', '--lsp' },
+        --   root_dir = require('lspconfig').util.root_pattern('Gemfile', '.git', '.'),
+        -- },
+        solargraph = {},
         lua_ls = {
           -- cmd = {...},
           -- filetypes = { ...},
@@ -796,6 +804,8 @@ require('lazy').setup({
       local ensure_installed = vim.tbl_keys(servers or {})
       vim.list_extend(ensure_installed, {
         'stylua', -- Used to format Lua code
+        'erb-formatter',
+        'erb-lint',
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
@@ -847,6 +857,8 @@ require('lazy').setup({
         -- You can use a sub-list to tell conform to run *until* a formatter
         -- is found.
         javascript = { { 'prettierd', 'prettier' } },
+        ruby = { 'solargraph' },
+        eruby = { 'htmlbeautifier' },
       },
     },
   },
@@ -886,7 +898,27 @@ require('lazy').setup({
       --  into multiple repos for maintenance purposes.
       'hrsh7th/cmp-nvim-lsp',
       'hrsh7th/cmp-path',
+      'hrsh7th/cmp-emoji',
     },
+    opts = function()
+      local cmp = require 'cmp'
+      cmp.setup {
+        mapping = {
+          ['<Tab>'] = cmp.mapping(function(fallback)
+            if cmp.visible() then
+              local entry = cmp.get_selected_entry()
+              if not entry then
+                cmp.select_next_item { behavior = cmp.SelectBehavior.Select }
+              else
+                cmp.confirm()
+              end
+            else
+              fallback()
+            end
+          end, { 'i', 's', 'c' }),
+        },
+      }
+    end,
     config = function()
       -- See `:help cmp`
       local cmp = require 'cmp'
@@ -963,14 +995,6 @@ require('lazy').setup({
   },
 
   -- [[THEME]]
-  -- {
-  --   'jaredgorski/spacecamp',
-  --   init = function()
-  --     vim.cmd.colorscheme 'spacecamp_lite'
-  --
-  --     vim.cmd.hi 'Comment gui=none'
-  --   end,
-  -- },
   -- { -- You can easily change to a different colorscheme.
   --   -- Change the name of the colorscheme plugin below, and then
   --   -- change the command in the config to whatever the name of that colorscheme is.
@@ -988,28 +1012,22 @@ require('lazy').setup({
   --   end,
   -- },
   --
-  -- {
-  --   'shaunsingh/nord.nvim',
+  --{
+  --   'rebelot/kanagawa.nvim',
+  --   priority = 1000,
   --   init = function()
-  --     vim.cmd.colorscheme 'nord'
-  --
-  --     vim.cmd.hi 'Comment gui=none'
-  --   end,
-  -- },
-  -- {
-  --   'AlexvZyl/nordic.nvim',
-  --   init = function()
-  --     vim.cmd.colorscheme 'nordic'
+  --     vim.cmd.colorscheme 'kanagawa'
   --
   --     vim.cmd.hi 'Comment gui=none'
   --   end,
   -- },
 
   {
-    'rebelot/kanagawa.nvim',
+    'catppuccin/nvim',
+    name = 'catppuccin',
     priority = 1000,
     init = function()
-      vim.cmd.colorscheme 'kanagawa'
+      vim.cmd.colorscheme 'catppuccin'
 
       vim.cmd.hi 'Comment gui=none'
     end,
@@ -1084,9 +1102,9 @@ require('lazy').setup({
         -- Some languages depend on vim's regex highlighting system (such as Ruby) for indent rules.
         --  If you are experiencing weird indenting issues, add the language to
         --  the list of additional_vim_regex_highlighting and disabled languages for indent.
-        additional_vim_regex_highlighting = { 'ruby' },
+        -- additional_vim_regex_highlighting = { 'ruby' },
       },
-      indent = { enable = true, disable = { 'ruby' } },
+      indent = { enable = true },
     },
     config = function(_, opts)
       -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
