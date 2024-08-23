@@ -290,12 +290,12 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   end,
 })
 
-vim.api.nvim_create_autocmd('VimEnter', {
-  desc = 'Auto explore files in when run nvim cmd',
-  callback = function()
-    vim.cmd ':NvimTreeToggle'
-  end,
-})
+-- vim.api.nvim_create_autocmd('VimEnter', {
+--   desc = 'Auto explore files in when run nvim cmd',
+--   callback = function()
+--     vim.cmd ':NvimTreeToggle'
+--   end,
+-- })
 --
 -- [[ Install `lazy.nvim` plugin manager ]]
 --    See `:help lazy.nvim.txt` or https://github.com/folke/lazy.nvim for more info
@@ -774,7 +774,6 @@ require('lazy').setup({
         --   cmd = { 'bundle', 'exec', 'rubocop', '--lsp' },
         --   root_dir = require('lspconfig').util.root_pattern('Gemfile', '.git', '.'),
         -- },
-        solargraph = {},
         lua_ls = {
           -- cmd = {...},
           -- filetypes = { ...},
@@ -804,8 +803,6 @@ require('lazy').setup({
       local ensure_installed = vim.tbl_keys(servers or {})
       vim.list_extend(ensure_installed, {
         'stylua', -- Used to format Lua code
-        'erb-formatter',
-        'erb-lint',
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
@@ -1011,16 +1008,6 @@ require('lazy').setup({
   --     vim.cmd.hi 'Comment gui=none'
   --   end,
   -- },
-  --
-  --{
-  --   'rebelot/kanagawa.nvim',
-  --   priority = 1000,
-  --   init = function()
-  --     vim.cmd.colorscheme 'kanagawa'
-  --
-  --     vim.cmd.hi 'Comment gui=none'
-  --   end,
-  -- },
 
   {
     'catppuccin/nvim',
@@ -1102,7 +1089,7 @@ require('lazy').setup({
         -- Some languages depend on vim's regex highlighting system (such as Ruby) for indent rules.
         --  If you are experiencing weird indenting issues, add the language to
         --  the list of additional_vim_regex_highlighting and disabled languages for indent.
-        -- additional_vim_regex_highlighting = { 'ruby' },
+        additional_vim_regex_highlighting = { 'ruby' },
       },
       indent = { enable = true },
     },
