@@ -96,10 +96,16 @@ vim.g.maplocalleader = ' '
 -- Set to true if you have a Nerd Font installed and selected in the terminal
 vim.g.have_nerd_font = true
 
+-- Set config for git Blamer (git lens for nvim)
+vim.g.blamer_enabled = true
+
 -- [[ Setting options ]]
 -- See `:help vim.opt`
 -- NOTE: You can change these options as you wish!
 --  For more options, you can see `:help option-list`
+
+-- Default fillchars end of buffer
+vim.opt.fillchars = { eob = ' ' }
 
 -- Make line numbers default
 vim.opt.number = true
@@ -296,7 +302,7 @@ vim.api.nvim_create_autocmd('TextYankPost', {
 --     vim.cmd ':NvimTreeToggle'
 --   end,
 -- })
---
+
 -- [[ Install `lazy.nvim` plugin manager ]]
 --    See `:help lazy.nvim.txt` or https://github.com/folke/lazy.nvim for more info
 local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'
@@ -381,6 +387,8 @@ require('lazy').setup({
       },
     },
   },
+
+  { 'APZelos/blamer.nvim' },
 
   -- NOTE: Plugins can also be configured to run Lua code when they are loaded.
   --
@@ -757,7 +765,7 @@ require('lazy').setup({
       --  - settings (table): Override the default settings passed when initializing the server.
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local servers = {
-        -- clangd = {},
+        clangd = {},
         -- gopls = {},
         -- pyright = {},
         -- rust_analyzer = {},
@@ -840,7 +848,9 @@ require('lazy').setup({
         -- Disable "format_on_save lsp_fallback" for languages that don't
         -- have a well standardized coding style. You can add additional
         -- languages here or re-enable it for the disabled ones.
-        local disable_filetypes = { c = true, cpp = true }
+        local disable_filetypes = {
+          -- c = true, cpp = true
+        }
         return {
           timeout_ms = 500,
           lsp_fallback = not disable_filetypes[vim.bo[bufnr].filetype],
@@ -853,7 +863,10 @@ require('lazy').setup({
         --
         -- You can use a sub-list to tell conform to run *until* a formatter
         -- is found.
+        cpp = { 'clang-format' },
+        c = { 'clang-format' },
         javascript = { { 'prettierd', 'prettier' } },
+        json = { 'prettier' },
         ruby = { 'solargraph' },
         eruby = { 'htmlbeautifier' },
       },
@@ -1010,13 +1023,50 @@ require('lazy').setup({
   -- },
 
   {
+    'AlexvZyl/nordic.nvim',
+    name = 'nordic',
+    priority = 1000,
+    config = function()
+      local C = require 'nordic.colors'
+      vim.cmd.colorscheme 'nordic'
+      require('nordic').setup {
+        cursorline = {
+          bg = C.gray2,
+        },
+        Cursorline = {
+          bg = C.gray2,
+        },
+        Visual = {
+          bg = C.gray2,
+        },
+        PmenuSel = {
+          bg = C.gray2,
+        },
+      }
+      require('nordic').load {
+        override = {
+          Cursorline = {
+            bg = C.gray2,
+          },
+          Visual = {
+            bg = C.gray2,
+          },
+          PmenuSel = {
+            bg = C.gray2,
+          },
+        },
+      }
+    end,
+  },
+
+  {
     'catppuccin/nvim',
     name = 'catppuccin',
     priority = 1000,
     init = function()
-      vim.cmd.colorscheme 'catppuccin'
+      -- vim.cmd.colorscheme 'catppuccin'
 
-      vim.cmd.hi 'Comment gui=none'
+      -- vim.cmd.hi 'Comment gui=none'
     end,
   },
 
