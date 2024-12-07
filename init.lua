@@ -175,7 +175,9 @@ vim.opt.autoindent = true
 
 vim.opt.smartindent = true
 
-vim.opt.wrap = false
+vim.opt.wrap = true
+vim.opt.linebreak = true
+vim.opt.breakindent = true
 
 vim.opt.swapfile = false
 vim.opt.backup = false
@@ -405,18 +407,6 @@ require('lazy').setup({
   -- after the plugin has been loaded:
   --  config = function() ... end
 
-  -- Indent guides
-  {
-    'lukas-reineke/indent-blankline.nvim',
-    main = 'ibl',
-    opts = {
-      indent = { char = '' },
-      whitespace = {
-        highlight = { 'Whitespace' },
-      },
-    },
-  },
-
   { -- Useful plugin to show you pending keybinds.
     'folke/which-key.nvim',
     event = 'VimEnter', -- Sets the loading event to 'VimEnter'
@@ -467,6 +457,7 @@ require('lazy').setup({
         respect_buf_cwd = true,
         sync_root_with_cwd = true,
         view = {
+          number = true,
           relativenumber = true,
           float = {
             enable = true,
@@ -766,7 +757,23 @@ require('lazy').setup({
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local servers = {
         clangd = {},
-        -- gopls = {},
+        gopls = {
+          gofumpt = true,
+          on_attach = require('lspconfig').util.on_attach,
+          capabilities = capabilities,
+          cmd = { 'gopls' },
+          filetypes = { 'go', 'gomod', 'gowork', 'gotmpl' },
+          root_dir = require('lspconfig').util.root_pattern('go.work', 'go.mod', '.git'),
+          settings = {
+            gopls = {
+              completeUnimported = true,
+              usePlaceholders = true,
+              analyses = {
+                unusedparams = true,
+              },
+            },
+          },
+        },
         -- pyright = {},
         -- rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
@@ -782,6 +789,12 @@ require('lazy').setup({
         --   cmd = { 'bundle', 'exec', 'rubocop', '--lsp' },
         --   root_dir = require('lspconfig').util.root_pattern('Gemfile', '.git', '.'),
         -- },
+        emmet_language_server = {
+          filetypes = { 'css', 'eruby', 'html', 'htmldjango', 'edge', 'javascriptreact', 'less', 'pug', 'sass', 'scss', 'typescriptreact', 'htmlangular' },
+        },
+        html = {
+          filetypes = { 'html', 'edge', 'templ' },
+        },
         lua_ls = {
           -- cmd = {...},
           -- filetypes = { ...},
@@ -852,7 +865,7 @@ require('lazy').setup({
           -- c = true, cpp = true
         }
         return {
-          timeout_ms = 500,
+          timeout_ms = 2500,
           lsp_fallback = not disable_filetypes[vim.bo[bufnr].filetype],
         }
       end,
@@ -865,12 +878,29 @@ require('lazy').setup({
         -- is found.
         cpp = { 'clang-format' },
         c = { 'clang-format' },
-        javascript = { { 'prettierd', 'prettier' } },
+        javascript = { 'prettierd', 'prettier', stop_after_first = true },
+        typescript = { 'prettierd', 'prettier', stop_after_first = true },
+        typescriptreact = { 'prettierd', 'prettier', stop_after_first = true },
+        javascriptreact = { 'prettierd', 'prettier', stop_after_first = true },
+        css = { 'prettierd', 'prettier', stop_after_first = true },
         json = { 'prettier' },
         ruby = { 'solargraph' },
         eruby = { 'htmlbeautifier' },
+        edge = { 'htmlbeautifier' },
+        go = { 'goimports', 'gofumpt' },
       },
     },
+    config = function(_, opts)
+      local conform = require 'conform'
+
+      -- Setup "conform.nvim" to work
+      conform.setup(opts)
+
+      -- Customise the default "prettier" command to format Markdown files as well
+      conform.formatters.prettier = {
+        prepend_args = { '--prose-wrap', 'always' },
+      }
+    end,
   },
 
   { -- Autocompletion
@@ -893,12 +923,12 @@ require('lazy').setup({
           -- `friendly-snippets` contains a variety of premade snippets.
           --    See the README about individual language/framework/plugin snippets:
           --    https://github.com/rafamadriz/friendly-snippets
-          -- {
-          --   'rafamadriz/friendly-snippets',
-          --   config = function()
-          --     require('luasnip.loaders.from_vscode').lazy_load()
-          --   end,
-          -- },
+          {
+            'rafamadriz/friendly-snippets',
+            config = function()
+              require('luasnip.loaders.from_vscode').lazy_load()
+            end,
+          },
         },
       },
       'saadparwaiz1/cmp_luasnip',
@@ -1111,6 +1141,10 @@ require('lazy').setup({
       --  Check out: https://github.com/echasnovski/mini.nvim
     end,
   },
+
+  -- Vim syntax highlighting for Edge templates (AdonisJS 4+)
+  { 'watzon/vim-edge-template' },
+
   { -- Highlight, edit, and navigate code
     'nvim-treesitter/nvim-treesitter',
     build = ':TSUpdate',
@@ -1131,6 +1165,11 @@ require('lazy').setup({
         'ruby',
         'vim',
         'vimdoc',
+        'go',
+        'gomod',
+        'gowork',
+        'gosum',
+        'gotmpl',
       },
       -- Autoinstall languages that are not installed
       auto_install = true,
@@ -1158,6 +1197,22 @@ require('lazy').setup({
       --    - Show your current context: https://github.com/nvim-treesitter/nvim-treesitter-context
       --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
     end,
+  },
+  {
+    'kawre/leetcode.nvim',
+    build = ':TSUpdate html',
+    dependencies = {
+      'nvim-telescope/telescope.nvim',
+      'nvim-lua/plenary.nvim', -- required by telescope
+      'MunifTanjim/nui.nvim',
+
+      -- optional
+      'nvim-treesitter/nvim-treesitter',
+      'nvim-tree/nvim-web-devicons',
+    },
+    opts = {
+      -- configuration goes here
+    },
   },
 
   -- The following two comments only work if you have downloaded the kickstart repo, not just copy pasted the
