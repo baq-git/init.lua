@@ -161,7 +161,7 @@ vim.opt.inccommand = 'split'
 vim.opt.cursorline = true
 
 -- Minimal number of screen lines to keep above and below the cursor.
-vim.opt.scrolloff = 999
+vim.opt.scrolloff = 15
 
 -- Primeagen settings
 vim.opt.guicursor = ''
@@ -298,13 +298,6 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   end,
 })
 
--- vim.api.nvim_create_autocmd('VimEnter', {
---   desc = 'Auto explore files in when run nvim cmd',
---   callback = function()
---     vim.cmd ':NvimTreeToggle'
---   end,
--- })
-
 -- [[ Install `lazy.nvim` plugin manager ]]
 --    See `:help lazy.nvim.txt` or https://github.com/folke/lazy.nvim for more info
 local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'
@@ -343,6 +336,14 @@ require('lazy').setup({
 
   -- "gc" to comment visual regions/lines
   { 'numToStr/Comment.nvim', opts = {} },
+
+  {
+    'JoosepAlviste/nvim-ts-context-commentstring',
+    lazy = true,
+    opts = {
+      enable_autocmd = false,
+    },
+  },
 
   { 'windwp/nvim-ts-autotag', opts = {} },
 
@@ -1212,6 +1213,8 @@ require('lazy').setup({
     },
     opts = {
       -- configuration goes here
+      ---@type lc.lang
+      lang = 'typescript',
     },
   },
 
@@ -1260,4 +1263,4 @@ require('lazy').setup({
 })
 
 -- The line beneath this is called `modeline`. See `:help modeline`
--- vim: ts=2 sts=2 sw=2 et
+-- vim: ts=2 sts=2 sw=2 etcon
