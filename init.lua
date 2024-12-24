@@ -806,7 +806,7 @@ require('lazy').setup({
                 callSnippet = 'Replace',
               },
               -- You can toggle below to ignore Lua_LS's noisy `missing-fields` warnings
-              -- diagnostics = { disable = { 'missing-fields' } },
+              diagnostics = { disable = { 'missing-fields' } },
             },
           },
         },
@@ -889,6 +889,7 @@ require('lazy').setup({
         eruby = { 'htmlbeautifier' },
         edge = { 'htmlbeautifier' },
         go = { 'goimports', 'gofumpt' },
+        python = { 'black' },
       },
     },
     config = function(_, opts)
@@ -1171,6 +1172,9 @@ require('lazy').setup({
         'gowork',
         'gosum',
         'gotmpl',
+        'c',
+        'cpp',
+        'python',
       },
       -- Autoinstall languages that are not installed
       auto_install = true,
@@ -1263,4 +1267,4 @@ require('lazy').setup({
 })
 
 -- The line beneath this is called `modeline`. See `:help modeline`
--- vim: ts=2 sts=2 sw=2 etcon
+-- vim: ts=2 sts=2 sw=2
