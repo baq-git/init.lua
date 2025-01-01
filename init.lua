@@ -1,5 +1,4 @@
 --[[
-
 =====================================================================
 ==================== READ THIS BEFORE CONTINUING ====================
 =====================================================================
@@ -335,7 +334,27 @@ require('lazy').setup({
   --    require('Comment').setup({})
 
   -- "gc" to comment visual regions/lines
-  { 'numToStr/Comment.nvim', opts = {} },
+  {
+    'numToStr/Comment.nvim',
+    opts = {},
+    config = function(_, opts)
+      -- Workaround to make nvim-ts-context-commentstring work with native comments
+      -- https://github.com/neovim/neovim/issues/28830#issuecomment-2119690661
+      local get_option = vim.filetype.get_option
+      vim.filetype.get_option = function(filetype, option)
+        return option == 'commentstring' and require('ts_context_commentstring.internal').calculate_commentstring() or get_option(filetype, option)
+      end
+      require('ts_context_commentstring').setup(opts)
+    end,
+    event = { 'BufReadPost', 'BufNewFile' },
+  },
+
+  {
+    'folke/ts-comments.nvim',
+    opts = {},
+    event = 'VeryLazy',
+    enabled = vim.fn.has 'nvim-0.10.0' == 1,
+  },
 
   {
     'JoosepAlviste/nvim-ts-context-commentstring',
@@ -1105,6 +1124,13 @@ require('lazy').setup({
   -- Highlight todo, notes, etc in comments
 
   { 'folke/todo-comments.nvim', event = 'VimEnter', dependencies = { 'nvim-lua/plenary.nvim' }, opts = { signs = false } },
+
+  {
+    'folke/ts-comments.nvim',
+    opts = {},
+    event = 'VeryLazy',
+    enabled = vim.fn.has 'nvim-0.10.0' == 1,
+  },
 
   { -- Collection of various small independent plugins/modules
     'echasnovski/mini.nvim',
