@@ -214,6 +214,61 @@ vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagn
 -- NOTE: This won't work in all terminal emulators/tmux/etc. Try your own mapping
 -- or just use <C-\><C-n> to exit terminal mode
 vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
+local state = {
+  floating = {
+    buf = -1,
+    win = -1,
+  },
+}
+
+local function create_floating_window(opts)
+  opts = opts or {}
+  local width = opts.width or math.floor(vim.o.columns * 0.8)
+  local height = opts.height or math.floor(vim.o.lines * 0.8)
+
+  -- Calculate the position to center the window
+  local col = math.floor((vim.o.columns - width) / 2)
+  local row = math.floor((vim.o.lines - height) / 2)
+
+  -- Create a buffer
+  local buf = nil
+  if vim.api.nvim_buf_is_valid(opts.buf) then
+    buf = opts.buf
+  else
+    buf = vim.api.nvim_create_buf(false, true) -- No file, scratch buffer
+  end
+
+  -- Define window configuration
+  local win_config = {
+    relative = 'editor',
+    width = width,
+    height = height,
+    col = col,
+    row = row,
+    style = 'minimal', -- No borders or extra UI elements
+    border = 'rounded',
+  }
+
+  -- Create the floating window
+  local win = vim.api.nvim_open_win(buf, true, win_config)
+  return { buf = buf, win = win }
+end
+
+local toggle_terminal = function()
+  if not vim.api.nvim_win_is_valid(state.floating.win) then
+    state.floating = create_floating_window { buf = state.floating.buf }
+    if vim.bo[state.floating.buf].buftype ~= 'terminal' then
+      vim.cmd.terminal()
+    end
+  else
+    vim.api.nvim_win_hide(state.floating.win)
+  end
+end
+
+-- Example usage:
+-- Create a floating window with default dimensions
+vim.api.nvim_create_user_command('Ft', toggle_terminal, {})
+vim.keymap.set('n', '<leader>Ft', '<cmd>Ft<cr>', { desc = 'Open float terminal' })
 
 -- TIP: Disable arrow keys in normal mode
 -- vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
@@ -810,10 +865,24 @@ require('lazy').setup({
         --   root_dir = require('lspconfig').util.root_pattern('Gemfile', '.git', '.'),
         -- },
         emmet_language_server = {
-          filetypes = { 'css', 'eruby', 'html', 'htmldjango', 'edge', 'javascriptreact', 'less', 'pug', 'sass', 'scss', 'typescriptreact', 'htmlangular' },
+          filetypes = {
+            'css',
+            'eruby',
+            'html',
+            'htmldjango',
+            'edge',
+            'javascriptreact',
+            'less',
+            'pug',
+            'sass',
+            'scss',
+            'typescriptreact',
+            'htmlangular',
+            'tpml',
+          },
         },
         html = {
-          filetypes = { 'html', 'edge', 'templ' },
+          filetypes = { 'html', 'edge', 'templ', 'tmpl' },
         },
         lua_ls = {
           -- cmd = {...},
@@ -862,6 +931,24 @@ require('lazy').setup({
     end,
   },
 
+  {
+    'nvimdev/lspsaga.nvim',
+    config = function()
+      require('lspsaga').setup {
+        lightbulb = {
+          enable = false,
+        },
+      }
+    end,
+    dependencies = {
+      'nvim-treesitter/nvim-treesitter', -- optional
+      'nvim-tree/nvim-web-devicons', -- optional
+    },
+    cmd = {
+      vim.keymap.set('n', 'K', '<cmd>Lspsaga hover_doc'),
+    },
+  },
+
   { -- Autoformat
     'stevearc/conform.nvim',
     lazy = false,
@@ -876,6 +963,7 @@ require('lazy').setup({
       },
     },
     opts = {
+
       notify_on_error = false,
       format_on_save = function(bufnr)
         -- Disable "format_on_save lsp_fallback" for languages that don't
@@ -898,17 +986,23 @@ require('lazy').setup({
         -- is found.
         cpp = { 'clang-format' },
         c = { 'clang-format' },
-        javascript = { 'prettierd', 'prettier', stop_after_first = true },
-        typescript = { 'prettierd', 'prettier', stop_after_first = true },
-        typescriptreact = { 'prettierd', 'prettier', stop_after_first = true },
-        javascriptreact = { 'prettierd', 'prettier', stop_after_first = true },
-        css = { 'prettierd', 'prettier', stop_after_first = true },
+        -- javascript = { 'prettierd', 'prettier', stop_after_first = true },
+        -- typescript = { 'prettierd', 'prettier', stop_after_first = true },
+        -- typescriptreact = { 'prettierd', 'prettier', stop_after_first = true },
+        -- javascriptreact = { 'prettierd', 'prettier', stop_after_first = true },
+        javascript = { 'prettier', stop_after_first = true },
+        typescript = { 'prettier', stop_after_first = true },
+        typescriptreact = { 'prettier', stop_after_first = true },
+        javascriptreact = { 'prettier', stop_after_first = true },
+        css = { 'prettier', stop_after_first = true },
         json = { 'prettier' },
         ruby = { 'solargraph' },
         eruby = { 'htmlbeautifier' },
         edge = { 'htmlbeautifier' },
         go = { 'goimports', 'gofumpt' },
         python = { 'black' },
+        html = { 'prettier' },
+        tmpl = { 'prettier' },
       },
     },
     config = function(_, opts)
@@ -1072,52 +1166,74 @@ require('lazy').setup({
   --     vim.cmd.hi 'Comment gui=none'
   --   end,
   -- },
+  -- {
+  --   'zenbones-theme/zenbones.nvim',
+  --   -- Optionally install Lush. Allows for more configuration or extending the colorscheme
+  --   -- If you don't want to install lush, make sure to set g:zenbones_compat = 1
+  --   -- In Vim, compat mode is turned on as Lush only works in Neovim.
+  --   dependencies = 'rktjmp/lush.nvim',
+  --   lazy = false,
+  --   priority = 1000,
+  --   -- you can set set configuration options here
+  --   config = function()
+  --     vim.g.zenbones_darken_comments = 45
+  --     vim.cmd.colorscheme 'zenbones'
+  --   end,
+  -- },
+
+  -- {
+  --   'AlexvZyl/nordic.nvim',
+  --   name = 'nordic',
+  --   priority = 1000,
+  --   config = function()
+  --     local C = require 'nordic.colors'
+  --     vim.cmd.colorscheme 'nordic'
+  --     require('nordic').setup {
+  --       cursorline = {
+  --         bg = C.gray2,
+  --       },
+  --       Cursorline = {
+  --         bg = C.gray2,
+  --       },
+  --       Visual = {
+  --         bg = C.gray2,
+  --       },
+  --       PmenuSel = {
+  --         bg = C.gray2,
+  --       },
+  --     }
+  --     require('nordic').load {
+  --       override = {
+  --         Cursorline = {
+  --           bg = C.gray2,
+  --         },
+  --         Visual = {
+  --           bg = C.gray2,
+  --         },
+  --         PmenuSel = {
+  --           bg = C.gray2,
+  --         },
+  --       },
+  --     }
+  --   end,
+  -- },
+
+  -- {
+  --   'catppuccin/nvim',
+  --   name = 'catppuccin',
+  --   priority = 1000,
+  --   init = function()
+  --     vim.cmd.colorscheme 'catppuccin'
+  --     vim.cmd.hi 'Comment gui=none'
+  --   end,
+  -- },
 
   {
-    'AlexvZyl/nordic.nvim',
-    name = 'nordic',
-    priority = 1000,
-    config = function()
-      local C = require 'nordic.colors'
-      vim.cmd.colorscheme 'nordic'
-      require('nordic').setup {
-        cursorline = {
-          bg = C.gray2,
-        },
-        Cursorline = {
-          bg = C.gray2,
-        },
-        Visual = {
-          bg = C.gray2,
-        },
-        PmenuSel = {
-          bg = C.gray2,
-        },
-      }
-      require('nordic').load {
-        override = {
-          Cursorline = {
-            bg = C.gray2,
-          },
-          Visual = {
-            bg = C.gray2,
-          },
-          PmenuSel = {
-            bg = C.gray2,
-          },
-        },
-      }
-    end,
-  },
-
-  {
-    'catppuccin/nvim',
-    name = 'catppuccin',
+    'rebelot/kanagawa.nvim',
+    name = 'kanagawa',
     priority = 1000,
     init = function()
-      -- vim.cmd.colorscheme 'catppuccin'
-
-      -- vim.cmd.hi 'Comment gui=none'
+      vim.cmd.colorscheme 'kanagawa'
     end,
   },
 
@@ -1170,6 +1286,9 @@ require('lazy').setup({
     end,
   },
 
+  -- Let's face it, syntax highlighting is boring. Why worry about syntax and diagnostics when you can worry about issues that don't even exist? Introducing: Syntax Gaslighting. Informs you about very real issues in your code (source: trust me) in real time, making you think twice before you commit another atrocity to production.
+
+  { 'NotAShelf/syntax-gaslighting.nvim' },
   -- Vim syntax highlighting for Edge templates (AdonisJS 4+)
   { 'watzon/vim-edge-template' },
 
@@ -1201,6 +1320,7 @@ require('lazy').setup({
         'c',
         'cpp',
         'python',
+        'sql',
       },
       -- Autoinstall languages that are not installed
       auto_install = true,
@@ -1229,6 +1349,7 @@ require('lazy').setup({
       --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
     end,
   },
+
   {
     'kawre/leetcode.nvim',
     build = ':TSUpdate html',
