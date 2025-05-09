@@ -898,6 +898,15 @@ require('lazy').setup({
             },
           },
         },
+        sqls = {
+          on_attach = function(client, bufnr)
+            require('sqls').on_attach(client, bufnr) -- require sqls.nvim
+            client.server_capabilities.documentFormattingProvider = false
+          end,
+          settings = {
+            sqls = {},
+          },
+        },
       }
 
       -- Ensure the servers and tools above are installed
@@ -996,13 +1005,14 @@ require('lazy').setup({
         javascriptreact = { 'prettier', stop_after_first = true },
         css = { 'prettier', stop_after_first = true },
         json = { 'prettier' },
-        ruby = { 'solargraph' },
-        eruby = { 'htmlbeautifier' },
-        edge = { 'htmlbeautifier' },
+        -- ruby = { 'solargraph' },
+        -- eruby = { 'htmlbeautifier' },
+        -- edge = { 'htmlbeautifier' },
         go = { 'goimports', 'gofumpt' },
         python = { 'black' },
         html = { 'prettier' },
         tmpl = { 'prettier' },
+        sql = { 'sleek' },
       },
     },
     config = function(_, opts)
