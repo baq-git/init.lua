@@ -206,6 +206,7 @@ vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous [D]
 vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next [D]iagnostic message' })
 vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, { desc = 'Show diagnostic [E]rror messages' })
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
+vim.diagnostic.config { update_in_insert = true }
 
 -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
 -- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
@@ -678,8 +679,8 @@ require('lazy').setup({
     'neovim/nvim-lspconfig',
     dependencies = {
       -- Automatically install LSPs and related tools to stdpath for Neovim
-      { 'williamboman/mason.nvim', config = true }, -- NOTE: Must be loaded before dependants
-      'williamboman/mason-lspconfig.nvim',
+      { 'williamboman/mason.nvim', version = '^1.0.0', config = true }, -- NOTE: Must be loaded before dependants
+      { 'williamboman/mason-lspconfig.nvim', version = '^1.0.0' },
       'WhoIsSethDaniel/mason-tool-installer.nvim',
 
       -- Useful status updates for LSP.
@@ -831,7 +832,9 @@ require('lazy').setup({
       --  - settings (table): Override the default settings passed when initializing the server.
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local servers = {
-        clangd = {},
+        clangd = {
+          filetypes = { 'c', 'cpp', 'objc', 'objcpp', 'cuda', 'hpp' },
+        },
         gopls = {
           gofumpt = true,
           on_attach = require('lspconfig').util.on_attach,
@@ -849,6 +852,9 @@ require('lazy').setup({
             },
           },
         },
+
+        ts_ls = {},
+
         -- pyright = {},
         -- rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
@@ -857,7 +863,6 @@ require('lazy').setup({
         --    https://github.com/pmizio/typescript-tools.nvim
         --
         -- But for many setups, the LSP (`tsserver`) will work just fine
-        -- tsserver = {},
         -- rubocop = {
         --   enabled = true,
         --   name = 'rubocop',
@@ -867,7 +872,6 @@ require('lazy').setup({
         emmet_language_server = {
           filetypes = {
             'css',
-            'eruby',
             'html',
             'htmldjango',
             'edge',
@@ -877,13 +881,114 @@ require('lazy').setup({
             'sass',
             'scss',
             'typescriptreact',
-            'htmlangular',
-            'tpml',
+            'tepml',
           },
         },
         html = {
-          filetypes = { 'html', 'edge', 'templ', 'tmpl' },
+          on_attach = require('lspconfig').util.on_attach,
+          capabilities = capabilities,
+          filetypes = { 'html', 'edge', 'templ' },
         },
+        htmx = {
+          on_attach = require('lspconfig').util.on_attach,
+          capabilities = capabilities,
+          filetypes = { 'html', 'edge', 'templ' },
+        },
+        tailwindcss = {
+          on_attach = require('lspconfig').util.on_attach,
+          capabilities = capabilities,
+          filetypes = {
+            -- html
+            'aspnetcorerazor',
+            'astro',
+            'astro-markdown',
+            'blade',
+            'clojure',
+            'django-html',
+            'htmldjango',
+            'edge',
+            'eelixir', -- vim ft
+            'elixir',
+            'ejs',
+            'erb',
+            'eruby', -- vim ft
+            'gohtml',
+            'gohtmltmpl',
+            'haml',
+            'handlebars',
+            'hbs',
+            'html',
+            'htmlangular',
+            'html-eex',
+            'heex',
+            'jade',
+            'leaf',
+            'liquid',
+            'markdown',
+            'mdx',
+            'mustache',
+            'njk',
+            'nunjucks',
+            'php',
+            'razor',
+            'slim',
+            'twig',
+            -- css
+            'css',
+            'less',
+            'postcss',
+            'sass',
+            'scss',
+            'stylus',
+            'sugarss',
+            -- js
+            'javascript',
+            'javascriptreact',
+            'rescript',
+            'typescript',
+            'typescriptreact',
+            -- mixed
+            'vue',
+            'svelte',
+            'templ',
+
+            'templ',
+            'javascript',
+            'typescript',
+            'javascriptreact',
+            'typescriptreact',
+          },
+          settings = {
+            tailwindCSS = {
+              validate = true,
+              lint = {
+                cssConflict = 'warning',
+                invalidApply = 'error',
+                invalidScreen = 'error',
+                invalidVariant = 'error',
+                invalidConfigPath = 'error',
+                invalidTailwindDirective = 'error',
+                recommendedVariantOrder = 'warning',
+              },
+              classAttributes = {
+                'class',
+                'className',
+                'class:list',
+                'classList',
+                'ngClass',
+              },
+              includeLanguages = {
+                eelixir = 'html-eex',
+                elixir = 'phoenix-heex',
+                eruby = 'erb',
+                heex = 'phoenix-heex',
+                htmlangular = 'html',
+                templ = 'html',
+              },
+            },
+          },
+        },
+
         lua_ls = {
           -- cmd = {...},
           -- filetypes = { ...},
@@ -925,7 +1030,9 @@ require('lazy').setup({
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
       require('mason-lspconfig').setup {
+
         handlers = {
+
           function(server_name)
             local server = servers[server_name] or {}
             -- This handles overriding only values explicitly passed
@@ -937,6 +1044,18 @@ require('lazy').setup({
         },
       }
     end,
+  },
+
+  {
+    'luckasRanarison/tailwind-tools.nvim',
+    name = 'tailwind-tools',
+    build = ':UpdateRemotePlugins',
+    dependencies = {
+      'nvim-treesitter/nvim-treesitter',
+      'nvim-telescope/telescope.nvim', -- optional
+      'neovim/nvim-lspconfig', -- optional
+    },
+    opts = {}, -- your configuration
   },
 
   {
@@ -971,7 +1090,6 @@ require('lazy').setup({
       },
     },
     opts = {
-
       notify_on_error = false,
       format_on_save = function(bufnr)
         -- Disable "format_on_save lsp_fallback" for languages that don't
@@ -992,8 +1110,8 @@ require('lazy').setup({
         --
         -- You can use a sub-list to tell conform to run *until* a formatter
         -- is found.
-        cpp = { 'clang-format' },
-        c = { 'clang-format' },
+        -- cpp = { 'clang-format' },
+        -- c = { 'clang-format' },
         -- javascript = { 'prettierd', 'prettier', stop_after_first = true },
         -- typescript = { 'prettierd', 'prettier', stop_after_first = true },
         -- typescriptreact = { 'prettierd', 'prettier', stop_after_first = true },
@@ -1003,15 +1121,16 @@ require('lazy').setup({
         typescriptreact = { 'prettier', stop_after_first = true },
         javascriptreact = { 'prettier', stop_after_first = true },
         css = { 'prettier', stop_after_first = true },
-        json = { 'prettier' },
+        json = { 'prettier', 'prettierd', stop_after_first = true },
         -- ruby = { 'solargraph' },
         -- eruby = { 'htmlbeautifier' },
         -- edge = { 'htmlbeautifier' },
         go = { 'goimports', 'gofumpt' },
         python = { 'black' },
-        html = { 'prettier' },
-        tmpl = { 'prettier' },
+        -- html = { 'prettier' },
+        templ = { 'templ' },
         sql = { 'sleek' },
+        proto = { 'buf' },
       },
     },
     config = function(_, opts)
@@ -1165,6 +1284,7 @@ require('lazy').setup({
   --   --
   --   -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
   --   'folke/tokyonight.nvim',
+  --   lazy = false,
   --   init = function()
   --     -- Load the colorscheme here.
   --     -- Like many other themes, this one has different styles, and you could load
@@ -1174,6 +1294,9 @@ require('lazy').setup({
   --     -- You can configure highlights by doing something like:
   --     vim.cmd.hi 'Comment gui=none'
   --   end,
+  --   opts = {
+  --     transparent = true,
+  --   },
   -- },
   -- {
   --   'zenbones-theme/zenbones.nvim',
@@ -1244,6 +1367,56 @@ require('lazy').setup({
     init = function()
       vim.cmd.colorscheme 'kanagawa'
     end,
+    opts = {
+      colors = { -- add/modify theme and palette colors
+        palette = {},
+        theme = {
+          wave = {},
+          lotus = {},
+          dragon = {},
+          all = {
+            ui = {
+              bg_gutter = 'none',
+              float = 'none',
+            },
+          },
+        },
+      },
+      transparent = true,
+
+      overrides = function(colors)
+        local theme = colors.theme
+        return {
+          NormalFloat = { bg = 'none' },
+          FloatBorder = { bg = 'none' },
+          FloatTitle = { bg = 'none' },
+
+          -- Save an hlgroup with dark background and dimmed foreground
+          -- so that you can use it where your still want darker windows.
+          -- E.g.: autocmd TermOpen * setlocal winhighlight=Normal:NormalDark
+          NormalDark = { fg = theme.ui.fg_dim, bg = theme.ui.bg_m3 },
+
+          -- Popular plugins that open floats will link to NormalFloat by default;
+          -- set their background accordingly if you wish to keep them dark and borderless
+          LazyNormal = { bg = theme.ui.bg_m3, fg = theme.ui.fg_dim },
+          MasonNormal = { bg = theme.ui.bg_m3, fg = theme.ui.fg_dim },
+
+          TelescopeTitle = { bg = 'none' },
+          TelescopeBorder = { bg = 'none' },
+          TelescopePromptNormal = { bg = 'none' },
+          TelescopePromptBorder = { bg = 'none' },
+          TelescopeResultsNormal = { bg = 'none' },
+          TelescopeResultsBorder = { bg = 'none' },
+          TelescopePreviewNormal = { bg = 'none' },
+          TelescopePreviewBorder = { bg = 'none' },
+
+          -- Pmenu = { fg = theme.ui.shade0, bg = theme.ui.bg_p1 }, -- add `blend = vim.o.pumblend` to enable transparency
+          -- PmenuSel = { fg = 'NONE', bg = theme.ui.bg_p2 },
+          -- PmenuSbar = { bg = theme.ui.bg_m1 },
+          -- PmenuThumb = { bg = theme.ui.bg_p2 },
+        }
+      end,
+    },
   },
 
   -- Highlight todo, notes, etc in comments
@@ -1299,7 +1472,7 @@ require('lazy').setup({
 
   { 'NotAShelf/syntax-gaslighting.nvim' },
   -- Vim syntax highlighting for Edge templates (AdonisJS 4+)
-  { 'watzon/vim-edge-template' },
+  -- { 'watzon/vim-edge-template' },
 
   { -- Highlight, edit, and navigate code
     'nvim-treesitter/nvim-treesitter',
@@ -1318,14 +1491,15 @@ require('lazy').setup({
         'markdown',
         'markdown_inline',
         'query',
-        'ruby',
+        -- 'ruby',
         'vim',
         'vimdoc',
         'go',
         'gomod',
         'gowork',
         'gosum',
-        'gotmpl',
+        'templ',
+        -- 'gotmpl',
         'c',
         'cpp',
         'python',
@@ -1374,7 +1548,98 @@ require('lazy').setup({
     opts = {
       -- configuration goes here
       ---@type lc.lang
-      lang = 'typescript',
+      lang = 'golang',
+    },
+  },
+
+  {
+    'jake-stewart/multicursor.nvim',
+    branch = '1.0',
+    config = function()
+      local mc = require 'multicursor-nvim'
+      mc.setup()
+
+      local set = vim.keymap.set
+
+      -- Add or skip cursor above/below the main cursor.
+      set({ 'n', 'x' }, '<up>', function()
+        mc.lineAddCursor(-1)
+      end)
+      set({ 'n', 'x' }, '<down>', function()
+        mc.lineAddCursor(1)
+      end)
+      set({ 'n', 'x' }, '<leader><up>', function()
+        mc.lineSkipCursor(-1)
+      end)
+      set({ 'n', 'x' }, '<leader><down>', function()
+        mc.lineSkipCursor(1)
+      end)
+
+      -- Add or skip adding a new cursor by matching word/selection
+      set({ 'n', 'x' }, '<leader>n', function()
+        mc.matchAddCursor(1)
+      end)
+      set({ 'n', 'x' }, '<leader>s', function()
+        mc.matchSkipCursor(1)
+      end)
+      set({ 'n', 'x' }, '<leader>N', function()
+        mc.matchAddCursor(-1)
+      end)
+      set({ 'n', 'x' }, '<leader>S', function()
+        mc.matchSkipCursor(-1)
+      end)
+
+      -- Add and remove cursors with control + left click.
+      set('n', '<c-leftmouse>', mc.handleMouse)
+      set('n', '<c-leftdrag>', mc.handleMouseDrag)
+      set('n', '<c-leftrelease>', mc.handleMouseRelease)
+
+      -- Disable and enable cursors.
+      set({ 'n', 'x' }, '<c-q>', mc.toggleCursor)
+
+      -- Mappings defined in a keymap layer only apply when there are
+      -- multiple cursors. This lets you have overlapping mappings.
+      mc.addKeymapLayer(function(layerSet)
+        -- Select a different cursor as the main one.
+        layerSet({ 'n', 'x' }, '<left>', mc.prevCursor)
+        layerSet({ 'n', 'x' }, '<right>', mc.nextCursor)
+
+        -- Delete the main cursor.
+        layerSet({ 'n', 'x' }, '<leader>x', mc.deleteCursor)
+
+        -- Enable and clear cursors using escape.
+        layerSet('n', '<esc>', function()
+          if not mc.cursorsEnabled() then
+            mc.enableCursors()
+          else
+            mc.clearCursors()
+          end
+        end)
+      end)
+
+      -- Customize how cursors look.
+      local hl = vim.api.nvim_set_hl
+      hl(0, 'MultiCursorCursor', { reverse = true })
+      hl(0, 'MultiCursorVisual', { link = 'Visual' })
+      hl(0, 'MultiCursorSign', { link = 'SignColumn' })
+      hl(0, 'MultiCursorMatchPreview', { link = 'Search' })
+      hl(0, 'MultiCursorDisabledCursor', { reverse = true })
+      hl(0, 'MultiCursorDisabledVisual', { link = 'Visual' })
+      hl(0, 'MultiCursorDisabledSign', { link = 'SignColumn' })
+    end,
+  },
+
+  {
+    'mistricky/codesnap.nvim',
+    build = 'make',
+    keys = {
+      { '<leader>cc', '<cmd>CodeSnap<cr>', mode = 'x', desc = 'Save selected code snapshot into clipboard' },
+      { '<leader>cs', '<cmd>CodeSnapSave<cr>', mode = 'x', desc = 'Save selected code snapshot in ~/Pictures' },
+    },
+    opts = {
+      save_path = '~/Pictures',
+      has_breadcrumbs = true,
+      bg_theme = 'bamboo',
     },
   },
 
