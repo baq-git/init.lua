@@ -186,7 +186,6 @@ vim.opt.shiftwidth = 2
 vim.opt.expandtab = true
 
 vim.opt.autoindent = true
-
 vim.opt.smartindent = true
 
 vim.opt.wrap = true
@@ -507,7 +506,7 @@ require('lazy').setup({
       spec = {
         { '<leader>s', group = '[S]earch' },
         { '<leader>t', group = '[T]oggle' },
-        { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'v' } },
+        -- { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'v' } },
         { '<leader>c', group = '[C]ode' },
         { '<leader>d', group = '[D]ocument' },
         { '<leader>r', group = '[R]ename' },
@@ -844,7 +843,7 @@ require('lazy').setup({
       --  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
       local capabilities = vim.lsp.protocol.make_client_capabilities()
       capabilities = vim.tbl_deep_extend('force', capabilities, require('cmp_nvim_lsp').default_capabilities())
-
+      local lspconfig = require 'lspconfig'
       --  Add any additional override configuration in the following tables. Available keys are:
       --  - cmd (table): Override the default command used to start the server
       --  - filetypes (table): Override the default list of associated filetypes for the server
@@ -855,13 +854,16 @@ require('lazy').setup({
         -- clangd = {
         --   filetypes = { 'c', 'cpp', 'objc', 'objcpp', 'cuda', 'hpp' },
         -- },
+
         gopls = {
           gofumpt = true,
-          on_attach = require('lspconfig').util.on_attach,
+          on_attach = vim.lsp.util.on_attach,
           capabilities = capabilities,
           cmd = { 'gopls' },
           filetypes = { 'go', 'gomod', 'gowork', 'gotmpl' },
-          root_dir = require('lspconfig').util.root_pattern('go.work', 'go.mod', '.git'),
+          root_dir = function(fname)
+            return vim.fs.root(fname, { 'go.work', 'go.mod', '.git' })
+          end,
           settings = {
             gopls = {
               completeUnimported = true,
@@ -872,6 +874,11 @@ require('lazy').setup({
             },
           },
         },
+
+        -- jdtls = {
+        --   cmd = { '/usr/bin/jdtls' },
+        -- },
+
         -- pyright = {},
         -- rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
@@ -882,7 +889,7 @@ require('lazy').setup({
         -- But for many setups, the LSP (`ts_ls`) will work just fine
         -- ts_ls = {
         --   enabled = true,
-        --   on_attach = require('lspconfig').util.on_attach,
+        --   -- on_attach = lspconfig.util.on_attach,
         --   capabilities = capabilities,
         --   filetypes = {
         --     'javascript',
@@ -894,6 +901,28 @@ require('lazy').setup({
         --     'vue',
         --     'svelte',
         --   },
+        --   on_attach = function(client, bufnr)
+        --     on_attach(client, bufnr)
+        --     vim.keymap.set('n', '<leader>ro', function()
+        --       vim.lsp.buf.execute_command {
+        --         command = '_typescript.organizeImports',
+        --         arguments = { vim.fn.expand '%:p' },
+        --       }
+        --     end, { buffer = bufnr, remap = false })
+        --   end,
+        --   root_dir = function(filename, bufnr)
+        --     local denoRootDir = lspconfig.util.root_pattern('deno.json', 'deno.json')(filename)
+        --     if denoRootDir then
+        --       -- print('this seems to be a deno project; returning nil so that tsserver does not attach');
+        --       return nil
+        --       -- else
+        --       -- print('this seems to be a ts project; return root dir based on package.json')
+        --     end
+        --
+        --     return lspconfig.util.root_pattern 'package.json'(filename)
+        --   end,
+        --
+        --   single_file_support = false,
         -- },
 
         -- vtsls = {
@@ -972,13 +1001,13 @@ require('lazy').setup({
         -- },
 
         html = {
-          on_attach = require('lspconfig').util.on_attach,
+          on_attach = vim.lsp.util.on_attach,
           capabilities = capabilities,
           filetypes = { 'html', 'edge', 'templ' },
         },
 
         htmx = {
-          on_attach = require('lspconfig').util.on_attach,
+          on_attach = vim.lsp.util.on_attach,
           capabilities = capabilities,
           filetypes = { 'html', 'edge', 'templ' },
         },
@@ -1022,14 +1051,62 @@ require('lazy').setup({
             -- by the server configuration above. Useful when disabling
             -- certain features of an LSP (for example, turning off formatting for ts_ls)
             server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
-            require('lspconfig')[server_name].setup(server)
+            vim.lsp.config[server_name].setup(server)
           end,
         },
       }
     end,
   },
 
-  -- add on lsp
+  {
+    'mfussenegger/nvim-jdtls',
+    dependencies = { 'folke/which-key.nvim' },
+    ft = { 'java' },
+    config = function()
+      local jdtls = require 'jdtls'
+      local config = {
+        -- Dùng binary đã cài từ yay
+        cmd = { 'jdtls' },
+        root_dir = require('jdtls.setup').find_root {
+          '.git',
+          'mvnw',
+          'gradlew',
+          'pom.xml',
+          'build.gradle',
+          'settings.gradle',
+        },
+
+        settings = {
+          java = {
+            configuration = {
+              runtimes = {
+                {
+                  name = 'JavaSE-21', -- thay bằng version bạn đang dùng
+                  path = '/usr/lib/jvm/java-21-openjdk/', -- kiểm tra bằng `archlinux-java status`
+                },
+                -- thêm Java 17, 23, 25... nếu cần
+              },
+            },
+            -- eclipse = { downloadSources = true },
+          },
+        },
+
+        -- Nếu muốn thêm lombok
+        init_options = {
+          bundles = { vim.fn.glob('/usr/share/java/lombok/lombok.jar', true) },
+        },
+      }
+
+      -- Tự động khởi động khi mở file Java
+      vim.api.nvim_create_autocmd('FileType', {
+        pattern = 'java',
+        callback = function()
+          jdtls.start_or_attach(config)
+        end,
+      })
+    end,
+  },
+
   {
     'pmizio/typescript-tools.nvim',
     dependencies = { 'nvim-lua/plenary.nvim', 'neovim/nvim-lspconfig' },
@@ -1072,7 +1149,7 @@ require('lazy').setup({
       },
       { '<leader>fi', '<cmd>ConformInfo<cr>', mode = '', desc = '[F]ormat [I]nfo' },
       {
-        '<leader>fra',
+        '<leader>fna',
         function()
           local filetype = vim.bo.filetype
           local node_filetypes = {
@@ -1089,10 +1166,10 @@ require('lazy').setup({
           end
         end,
         mode = 'n',
-        desc = '[F]ix [R]eact App: [A]dd Imports',
+        desc = '[F]ix [N]ode Imports: [A]dd Imports',
       },
       {
-        '<leader>frr',
+        '<leader>fnr',
         function()
           local filetype = vim.bo.filetype
           local node_filetypes = {
@@ -1110,7 +1187,7 @@ require('lazy').setup({
           end
         end,
         mode = 'n',
-        desc = '[F]ix [R]eact App: [R]emove Unused Imports',
+        desc = '[F]ix [N]ode Imports: [R]emove Unused Imports',
       },
     },
     opts = {
@@ -1152,17 +1229,17 @@ require('lazy').setup({
     },
   },
 
-  {
-    'luckasRanarison/tailwind-tools.nvim',
-    name = 'tailwind-tools',
-    build = ':UpdateRemotePlugins',
-    dependencies = {
-      'nvim-treesitter/nvim-treesitter',
-      'nvim-telescope/telescope.nvim', -- optional
-      'neovim/nvim-lspconfig', -- optional
-    },
-    opts = {}, -- your configuration
-  },
+  -- {
+  --   'luckasRanarison/tailwind-tools.nvim',
+  --   name = 'tailwind-tools',
+  --   build = ':UpdateRemotePlugins',
+  --   dependencies = {
+  --     'nvim-treesitter/nvim-treesitter',
+  --     'nvim-telescope/telescope.nvim', -- optional
+  --     'neovim/nvim-lspconfig', -- optional
+  --   },
+  --   opts = {}, -- your configuration
+  -- },
 
   -- AUTO TAGS
   { 'windwp/nvim-ts-autotag', opts = {} },
@@ -1617,7 +1694,22 @@ require('lazy').setup({
     main = 'nvim-treesitter.configs', -- Sets main module to use for opts
     -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
     opts = {
-      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' },
+      ensure_installed = {
+        'bash',
+        'c',
+        'diff',
+        'html',
+        'lua',
+        'luadoc',
+        'markdown',
+        'markdown_inline',
+        'query',
+        'vim',
+        'vimdoc',
+        'javascript',
+        'typescript',
+        'java',
+      },
       -- Autoinstall languages that are not installed
       auto_install = true,
       highlight = {
@@ -1625,9 +1717,13 @@ require('lazy').setup({
         -- Some languages depend on vim's regex highlighting system (such as Ruby) for indent rules.
         --  If you are experiencing weird indenting issues, add the language to
         --  the list of additional_vim_regex_highlighting and disabled languages for indent.
-        additional_vim_regex_highlighting = { 'ruby' },
+        -- additional_vim_regex_highlighting = { 'ruby' },
       },
-      indent = { enable = true, disable = { 'ruby' } },
+
+      indent = {
+        enable = true,
+        disable = { 'javascript', 'typescript' },
+      },
     },
     -- There are additional nvim-treesitter modules that you can use to interact
     -- with nvim-treesitter. You should go explore a few and see what interests you:
@@ -1809,41 +1905,41 @@ require('lazy').setup({
   },
 
   -- AI plugins
-  {
-    'Exafunction/codeium.nvim',
-    dependencies = {
-      'nvim-lua/plenary.nvim',
-      'hrsh7th/nvim-cmp',
-    },
-    config = function()
-      vim.keymap.set({ 'n', 'i' }, '<leader>at', '<CMD>Codeium Toggle<CR>', { desc = 'Toggle CODEIUM AI Completion' })
-      require('codeium').setup {
-        virtual_text = {
-          enabled = true,
-          idle_delay = 50,
-          default_filetype_enabled = true,
-
-          key_bindings = {
-            accept = '<Tab>',
-          },
-        },
-        enable_cmp_source = false,
-        default_filetype_enabled = true,
-        filetypes = {
-          html = true,
-          css = true,
-          json = true,
-          typescript = true,
-          javascript = true,
-          typescriptreact = true,
-          javascriptreact = true,
-          go = true,
-          python = true,
-          sql = true,
-        },
-      }
-    end,
-  },
+  -- {
+  --   'Exafunction/codeium.nvim',
+  --   dependencies = {
+  --     'nvim-lua/plenary.nvim',
+  --     'hrsh7th/nvim-cmp',
+  --   },
+  --   config = function()
+  --     vim.keymap.set({ 'n', 'i' }, '<leader>at', '<CMD>Codeium Toggle<CR>', { desc = 'Toggle CODEIUM AI Completion' })
+  --     require('codeium').setup {
+  --       virtual_text = {
+  --         enabled = true,
+  --         idle_delay = 50,
+  --         default_filetype_enabled = true,
+  --
+  --         key_bindings = {
+  --           accept = '<Tab>',
+  --         },
+  --       },
+  --       enable_cmp_source = false,
+  --       default_filetype_enabled = true,
+  --       filetypes = {
+  --         html = true,
+  --         css = true,
+  --         json = true,
+  --         typescript = true,
+  --         javascript = true,
+  --         typescriptreact = true,
+  --         javascriptreact = true,
+  --         go = true,
+  --         python = true,
+  --         sql = true,
+  --       },
+  --     }
+  --   end,
+  -- },
 
   -- {
   --   'supermaven-inc/supermaven-nvim',
@@ -1862,6 +1958,41 @@ require('lazy').setup({
   -- },
 
   -- UI PLUGINS
+  {
+    'ThePrimeagen/harpoon',
+    branch = 'harpoon2',
+    dependencies = { 'nvim-lua/plenary.nvim' },
+    opts = {
+      menu = {
+        width = vim.api.nvim_win_get_width(0) - 4,
+      },
+      settings = {
+        save_on_toggle = true,
+      },
+    },
+    keys = function()
+      local keys = {
+        {
+          '<leader>H',
+          function()
+            require('harpoon'):list():add()
+          end,
+          desc = 'Harpoon add file',
+        },
+        {
+          '<leader>h',
+          function()
+            local harpoon = require 'harpoon'
+            harpoon.ui:toggle_quick_menu(harpoon:list())
+          end,
+          desc = 'Harpoon Quick Menu',
+        },
+      }
+
+      return keys
+    end,
+  },
+
   {
     'akinsho/bufferline.nvim',
     event = 'VeryLazy',
@@ -1945,6 +2076,28 @@ require('lazy').setup({
         desc = 'Toggle Terminal',
       },
     },
+  },
+  {
+    'hat0uma/csvview.nvim',
+    ---@module "csvview"
+    ---@type CsvView.Options
+    opts = {
+      parser = { comments = { '#', '//' } },
+      keymaps = {
+        -- Text objects for selecting fields
+        -- textobject_field_inner = { 'if', mode = { 'o', 'x' } },
+        -- textobject_field_outer = { 'af', mode = { 'o', 'x' } },
+        -- Excel-like navigation:
+        -- Use <Tab> and <S-Tab> to move horizontally between fields.
+        -- Use <Enter> and <S-Enter> to move vertically between rows and place the cursor at the end of the field.
+        -- Note: In terminals, you may need to enable CSI-u mode to use <S-Tab> and <S-Enter>.
+        -- jump_next_field_end = { '<Backspace', mode = { 'n', 'v' } },
+        -- jump_prev_field_end = { '<S-Tab>', mode = { 'n', 'v' } },
+        -- jump_next_row = { '<Enter>', mode = { 'n', 'v' } },
+        -- jump_prev_row = { '<S-Enter>', mode = { 'n', 'v' } },
+      },
+    },
+    cmd = { 'CsvViewEnable', 'CsvViewDisable', 'CsvViewToggle' },
   },
 
   -- {
